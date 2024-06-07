@@ -24,14 +24,12 @@ const {
  * The material pipeline stage processes textures and other uniforms needed
  * to render a primitive. This handles the following material types:
  * <ul>
- *   <li>Basic glTF materials (PBR metallic roughness model)</li>
- *   <li>The `KHR_materials_specular` glTF extension</li>
- *   <li>The `KHR_materials_pbrSpecularGlossiness` glTF extension</li>
- *   <li>The `KHR_materials_unlit` glTF extension</li>
+ * <li>Basic glTF materials (PBR metallic roughness model)</li>
+ * <li>The `KHR_materials_specular` glTF extension</li>
+ * <li>The `KHR_materials_pbrSpecularGlossiness` glTF extension</li>
+ * <li>The `KHR_materials_unlit` glTF extension</li>
  * </ul>
- *
  * @namespace MaterialPipelineStage
- *
  * @private
  */
 const MaterialPipelineStage = {
@@ -180,13 +178,11 @@ MaterialPipelineStage.process = function (
 
 /**
  * Process a single texture transformation and add it to the shader and uniform map.
- *
  * @param {ShaderBuilder} shaderBuilder The shader builder to modify
  * @param {Object<string, Function>} uniformMap The uniform map to modify.
  * @param {ModelComponents.TextureReader} textureReader The texture to add to the shader
  * @param {string} uniformName The name of the sampler uniform such as <code>u_baseColorTexture</code>
  * @param {string} defineName The name of the texture for use in the defines, minus any prefix or suffix. For example, "BASE_COLOR" or "EMISSIVE"
- *
  * @private
  */
 function processTextureTransform(
@@ -256,13 +252,12 @@ function processTextureScale(
 
 /**
  * Process a single texture and add it to the shader and uniform map.
- *
  * @param {ShaderBuilder} shaderBuilder The shader builder to modify
  * @param {Object<string, Function>} uniformMap The uniform map to modify.
  * @param {ModelComponents.TextureReader} textureReader The texture to add to the shader
  * @param {string} uniformName The name of the sampler uniform such as <code>u_baseColorTexture</code>
  * @param {string} defineName The name of the texture for use in the defines, minus any prefix or suffix. For example, "BASE_COLOR" or "EMISSIVE"
- *
+ * @param defaultTexture
  * @private
  */
 function processTexture(
@@ -396,7 +391,6 @@ function processMaterialUniforms(
 
 /**
  * Add uniforms and defines for the KHR_materials_pbrSpecularGlossiness extension
- *
  * @param {ModelComponents.SpecularGlossiness} specularGlossiness
  * @param {Object<string, Function>} uniformMap The uniform map to modify.
  * @param {ShaderBuilder} shaderBuilder
@@ -510,7 +504,6 @@ function processSpecularGlossinessUniforms(
 
 /**
  * Add uniforms and defines for the KHR_materials_specular extension
- *
  * @param {ModelComponents.Specular} specular
  * @param {Object<string, Function>} uniformMap The uniform map to modify.
  * @param {ShaderBuilder} shaderBuilder
@@ -606,7 +599,6 @@ const scratchAnisotropy = new Cartesian3();
 
 /**
  * Add uniforms and defines for the KHR_materials_anisotropy extension
- *
  * @param {ModelComponents.Anisotropy} anisotropy
  * @param {Object<string, Function>} uniformMap The uniform map to modify.
  * @param {ShaderBuilder} shaderBuilder
@@ -661,7 +653,6 @@ function processAnisotropyUniforms(
 
 /**
  * Add uniforms and defines for the KHR_materials_clearcoat extension
- *
  * @param {ModelComponents.Clearcoat} clearcoat
  * @param {Object<string, Function>} uniformMap The uniform map to modify.
  * @param {ShaderBuilder} shaderBuilder
@@ -764,7 +755,6 @@ function processClearcoatUniforms(
 
 /**
  * Add uniforms and defines for the PBR metallic roughness model
- *
  * @param {ModelComponents.MetallicRoughness} metallicRoughness
  * @param {Object<string, Function>} uniformMap The uniform map to modify.
  * @param {ShaderBuilder} shaderBuilder
