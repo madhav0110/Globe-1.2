@@ -3,10 +3,13 @@ import defined from "../../Core/defined.js";
 import ImageBasedLightingStageFS from "../../Shaders/Model/ImageBasedLightingStageFS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import SpecularEnvironmentCubeMap from "../SpecularEnvironmentCubeMap.js";
+import Cartesian2 from "../../Core/Cartesian2.js";
 
 const ImageBasedLightingPipelineStage = {
   name: "ImageBasedLightingPipelineStage", // Helps with debugging
 };
+
+const scratchCartesian = new Cartesian2();
 
 /**
  * Add shader code, uniforms, and defines related to image based lighting
@@ -21,7 +24,13 @@ ImageBasedLightingPipelineStage.process = function (
   frameState
 ) {
   const imageBasedLighting = model.imageBasedLighting;
+  const environmentMapManager = model.environmentMapManager;
   const shaderBuilder = renderResources.shaderBuilder;
+
+  // If environment maps are not specifically provided, use procedural lighting.
+  const specularEnvironmentMapAtlas = environmentMapManager.radianceCubeMap;
+  const sphericalHarmonicCoefficients =
+    environmentMapManager.sphericalHarmonicCoefficients;
 
   shaderBuilder.addDefine(
     "USE_IBL_LIGHTING",
@@ -47,7 +56,18 @@ ImageBasedLightingPipelineStage.process = function (
       );
     }
 
-    if (defined(imageBasedLighting.sphericalHarmonicCoefficients)) {
+    if (defined(specularEnvironmentMapAtlas)) {
+      shaderBuilder.addDefine(
+        "COMPUTE_POSITION_WC_ATMOSPHERE",
+        undefined,
+        ShaderDestination.BOTH
+      );
+    }
+
+    if (
+      defined(sphericalHarmonicCoefficients) &&
+      defined(sphericalHarmonicCoefficients[0])
+    ) {
       shaderBuilder.addDefine(
         "DIFFUSE_IBL",
         undefined,
@@ -71,10 +91,7 @@ ImageBasedLightingPipelineStage.process = function (
       );
     }
 
-    if (
-      defined(imageBasedLighting.specularEnvironmentCubeMap) &&
-      imageBasedLighting.specularEnvironmentCubeMap.ready
-    ) {
+    if (defined(specularEnvironmentMapAtlas)) {
       shaderBuilder.addDefine(
         "SPECULAR_IBL",
         undefined,
@@ -104,33 +121,21 @@ ImageBasedLightingPipelineStage.process = function (
     }
   }
 
-  if (defined(imageBasedLighting.luminanceAtZenith)) {
-    shaderBuilder.addDefine(
-      "USE_SUN_LUMINANCE",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-    shaderBuilder.addUniform(
-      "float",
-      "model_luminanceAtZenith",
-      ShaderDestination.FRAGMENT
-    );
-  }
-
   shaderBuilder.addFragmentLines(ImageBasedLightingStageFS);
 
   const uniformMap = {
     model_iblFactor: function () {
-      return imageBasedLighting.imageBasedLightingFactor;
+      return Cartesian2.multiplyByScalar(
+        imageBasedLighting.imageBasedLightingFactor,
+        environmentMapManager?.intensity || 1.0,
+        scratchCartesian
+      );
     },
     model_iblReferenceFrameMatrix: function () {
       return model._iblReferenceFrameMatrix;
     },
-    model_luminanceAtZenith: function () {
-      return imageBasedLighting.luminanceAtZenith;
-    },
     model_sphericalHarmonicCoefficients: function () {
-      return imageBasedLighting.sphericalHarmonicCoefficients;
+      return sphericalHarmonicCoefficients;
     },
     model_specularEnvironmentMaps: function () {
       return imageBasedLighting.specularEnvironmentCubeMap.texture;
@@ -139,6 +144,15 @@ ImageBasedLightingPipelineStage.process = function (
       return imageBasedLighting.specularEnvironmentCubeMap.maximumMipmapLevel;
     },
   };
+
+  if (defined(specularEnvironmentMapAtlas)) {
+    uniformMap.model_specularEnvironmentMaps = function () {
+      return specularEnvironmentMapAtlas;
+    };
+    uniformMap.model_specularEnvironmentMapsMaximumLOD = function () {
+      return environmentMapManager.maximumMipmapLevel;
+    };
+  }
 
   renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
 };
